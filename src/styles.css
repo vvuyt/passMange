@@ -1,0 +1,464 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  /* 主题变量 - 默认深色主题 */
+  --color-primary: #3b82f6;
+  --color-background: #111827;
+  --color-sidebar: #1f2937;
+  --color-card: #1f2937;
+  --color-text: #ffffff;
+  --color-text-secondary: #9ca3af;
+  --color-border: #374151;
+  
+  /* 选中状态颜色 */
+  --color-selected-bg: rgba(59, 130, 246, 0.15);
+  --color-selected-border: rgba(59, 130, 246, 0.5);
+  --color-selected-text: #60a5fa;
+  --color-hover-bg: rgba(255, 255, 255, 0.05);
+
+  /* 优化字体栈 - Inter 用于英文/数字，思源黑体用于中文 */
+  font-family: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  font-size: 14px;
+  line-height: 1.6;
+  font-weight: 400;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-text-size-adjust: 100%;
+  font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+  letter-spacing: -0.01em;
+}
+
+/* 应用主题变量 */
+body {
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+/* 主题相关的工具类 */
+.bg-theme-bg { background-color: var(--color-background); }
+.bg-theme-sidebar { background-color: var(--color-sidebar); }
+.bg-theme-card { background-color: var(--color-card); }
+.bg-theme-primary { background-color: var(--color-primary); }
+.hover\:bg-theme-primary:hover { background-color: var(--color-primary); }
+
+.text-theme { color: var(--color-text); }
+.text-theme-secondary { color: var(--color-text-secondary); }
+.text-theme-primary { color: var(--color-primary); }
+
+.border-theme { border-color: var(--color-border); }
+.bg-theme-border { background-color: var(--color-border); }
+
+/* 选中状态样式 */
+.bg-selected { background-color: var(--color-selected-bg); }
+.border-selected { border-color: var(--color-selected-border); }
+.text-selected { color: var(--color-selected-text); }
+.bg-hover { background-color: var(--color-hover-bg); }
+
+/* 侧边栏选中项样式 */
+.sidebar-selected {
+  background-color: var(--color-selected-bg);
+  border-left: 3px solid var(--color-primary);
+  color: var(--color-selected-text);
+}
+
+/* 列表项选中样式 */
+.list-item-selected {
+  background-color: var(--color-selected-bg);
+  border-left: 3px solid var(--color-primary);
+}
+
+/* 列表项 hover 样式 */
+.list-item-hover:hover {
+  background-color: var(--color-hover-bg);
+}
+
+/* 按钮主题 */
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+}
+.btn-primary:hover {
+  filter: brightness(1.1);
+}
+
+/* 输入框主题 */
+.input-theme {
+  background-color: var(--color-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  transition: border-color 0.2s ease;
+}
+.input-theme:focus {
+  border-color: var(--color-primary);
+  outline: none;
+}
+.input-theme::placeholder {
+  color: var(--color-text-secondary);
+}
+
+/* 输入框选中文本样式 */
+.input-theme::selection,
+input::selection,
+textarea::selection {
+  background-color: rgba(59, 130, 246, 0.3);
+  color: inherit;
+}
+
+
+/* 自定义滚动条样式 */
+.custom-scrollbar::-webkit-scrollbar,
+*::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track,
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb,
+*::-webkit-scrollbar-thumb {
+  background-color: var(--color-border);
+  border-radius: 4px;
+  border: 2px solid transparent;
+  background-clip: content-box;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb:hover,
+*::-webkit-scrollbar-thumb:hover {
+  background-color: var(--color-text-secondary);
+}
+
+/* 滚动条角落 */
+.custom-scrollbar::-webkit-scrollbar-corner,
+*::-webkit-scrollbar-corner {
+  background: transparent;
+}
+
+/* Firefox 滚动条 */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-border) transparent;
+}
+
+/* 亮色主题 */
+[data-theme="light"] {
+  --color-primary: #2563eb;
+  --color-background: #f3f4f6;
+  --color-sidebar: #ffffff;
+  --color-card: #ffffff;
+  --color-text: #111827;
+  --color-text-secondary: #6b7280;
+  --color-border: #e5e7eb;
+  
+  /* 亮色主题选中状态 */
+  --color-selected-bg: rgba(37, 99, 235, 0.1);
+  --color-selected-border: rgba(37, 99, 235, 0.4);
+  --color-selected-text: #2563eb;
+  --color-hover-bg: rgba(0, 0, 0, 0.03);
+}
+
+[data-theme="light"] *::-webkit-scrollbar-thumb {
+  background-color: #d1d5db;
+}
+
+[data-theme="light"] *::-webkit-scrollbar-thumb:hover {
+  background-color: #9ca3af;
+}
+
+/* 拖动条样式 */
+.resize-handle {
+  cursor: col-resize;
+  user-select: none;
+  touch-action: none;
+}
+
+/* 拖动时禁止选择文本 */
+body.resizing {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+body.resizing * {
+  cursor: col-resize !important;
+  user-select: none !important;
+}
+
+/* 禁用侧边栏文本选择 */
+.no-select {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+/* 禁用全局文本选择高亮（可选区域除外） */
+::selection {
+  background-color: rgba(59, 130, 246, 0.25);
+  color: inherit;
+}
+
+/* 输入框内的选中样式 */
+input::selection,
+textarea::selection {
+  background-color: rgba(59, 130, 246, 0.35);
+  color: inherit;
+}
+
+/* 全局移除默认 focus outline - 彻底移除所有默认焦点样式 */
+*:focus,
+*:focus-visible,
+*:focus-within {
+  outline: none !important;
+  outline-offset: 0 !important;
+}
+
+/* 输入框焦点样式 - 柔和的边框变化 */
+input:focus,
+textarea:focus,
+select:focus,
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: none !important;
+}
+
+/* input-theme 类的焦点样式 */
+.input-theme:focus,
+.input-theme:focus-visible,
+.input-theme:focus-within {
+  outline: none !important;
+  border-color: var(--color-primary) !important;
+  box-shadow: none !important;
+}
+
+/* 按钮焦点样式 - 完全移除 */
+button:focus,
+button:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* 移除所有元素的默认 focus ring */
+*:focus:not(:focus-visible) {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* select 下拉框样式优化 */
+select {
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%239ca3af' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='M6 8l4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.5rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+}
+
+/* select option 样式 */
+select option {
+  background-color: var(--color-card);
+  color: var(--color-text);
+  padding: 8px 12px;
+}
+
+/* 侧边栏禁用选择 */
+.bg-theme-sidebar {
+  user-select: none;
+  -webkit-user-select: none;
+}
+
+
+/* focus-within 边框颜色变化 */
+.focus-within\:border-theme-primary:focus-within {
+  border-color: var(--color-primary) !important;
+}
+
+
+/* 抖动动画 */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-4px); }
+  20%, 40%, 60%, 80% { transform: translateX(4px); }
+}
+
+.animate-shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* ========== 全局过渡动画 ========== */
+
+/* 页面切换动画 */
+.page-transition {
+  animation: fadeInUp 0.4s ease-out;
+}
+
+/* 卡片入场动画 */
+.card-enter {
+  animation: scaleIn 0.3s ease-out;
+}
+
+/* 列表项入场动画 - 交错效果 */
+.list-item-enter {
+  animation: fadeInUp 0.3s ease-out backwards;
+}
+
+/* 模态框动画 */
+.modal-backdrop {
+  animation: fadeIn 0.2s ease-out;
+}
+
+.modal-content {
+  animation: scaleIn 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* 下拉菜单动画 */
+.dropdown-enter {
+  animation: fadeInDown 0.2s ease-out;
+  transform-origin: top;
+}
+
+/* 侧边栏项目 hover 效果 */
+.sidebar-item {
+  transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.sidebar-item:hover {
+  transform: translateX(4px);
+}
+
+/* 按钮点击效果 */
+.btn-press {
+  transition: transform 0.1s ease;
+}
+
+.btn-press:active {
+  transform: scale(0.97);
+}
+
+/* 图标旋转动画 */
+.icon-spin {
+  transition: transform 0.3s ease;
+}
+
+.icon-spin:hover {
+  transform: rotate(90deg);
+}
+
+/* 展开/收起动画 */
+.expand-enter {
+  animation: expandIn 0.3s ease-out;
+  overflow: hidden;
+}
+
+@keyframes expandIn {
+  0% {
+    opacity: 0;
+    max-height: 0;
+  }
+  100% {
+    opacity: 1;
+    max-height: 500px;
+  }
+}
+
+/* 渐变背景动画 */
+.gradient-animate {
+  background-size: 200% 200%;
+  animation: gradientShift 3s ease infinite;
+}
+
+@keyframes gradientShift {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+/* 悬浮卡片效果 */
+.hover-lift {
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.hover-lift:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* 输入框聚焦动画 */
+.input-focus-animate {
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.input-focus-animate:focus {
+  transform: scale(1.01);
+}
+
+/* 复选框/开关动画 */
+.toggle-animate {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 进度条动画 */
+.progress-animate {
+  transition: width 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 标签页切换动画 */
+.tab-indicator {
+  transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1), width 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* 通知/Toast 动画 */
+.toast-enter {
+  animation: slideInRight 0.3s ease-out;
+}
+
+.toast-exit {
+  animation: fadeOut 0.2s ease-out forwards;
+}
+
+@keyframes fadeOut {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(20px); }
+}
+
+/* 骨架屏加载动画 */
+.skeleton-loading {
+  background: linear-gradient(90deg, var(--color-card) 25%, var(--color-border) 50%, var(--color-card) 75%);
+  background-size: 200% 100%;
+  animation: skeletonWave 1.5s ease-in-out infinite;
+}
+
+@keyframes skeletonWave {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* 脉冲效果 - 用于提示新内容 */
+.pulse-highlight {
+  animation: pulseHighlight 2s ease-in-out;
+}
+
+@keyframes pulseHighlight {
+  0%, 100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+  50% { box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.3); }
+}
+
+/* 列表项交错动画延迟 */
+.stagger-1 { animation-delay: 0.05s; }
+.stagger-2 { animation-delay: 0.1s; }
+.stagger-3 { animation-delay: 0.15s; }
+.stagger-4 { animation-delay: 0.2s; }
+.stagger-5 { animation-delay: 0.25s; }
+.stagger-6 { animation-delay: 0.3s; }
+.stagger-7 { animation-delay: 0.35s; }
+.stagger-8 { animation-delay: 0.4s; }
+
+/* 全局过渡 - 应用于常见属性 */
+.transition-smooth {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
