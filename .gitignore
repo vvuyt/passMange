@@ -38,6 +38,9 @@ coverage/
 *.temp
 .cache/
 
+# Tesseract OCR 语言数据
+*.traineddata
+
 # 用户数据（开发时可能生成）
 *.db
 *.sqlite

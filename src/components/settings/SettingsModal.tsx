@@ -4,6 +4,8 @@ import TotpSettings from './TotpSettings';
 import DestroyVaultDialog from './DestroyVaultDialog';
 import SyncSettings from './SyncSettings';
 import SecurityInfoSection from './SecurityInfoSection';
+import ShortcutSettings from './ShortcutSettings';
+import OCRSettings from './OCRSettings';
 import { getAutoLockTimeout, setAutoLockTimeout } from '../../utils/api';
 
 interface Theme {
@@ -136,15 +138,17 @@ export default function SettingsModal({ isOpen, onClose }: Props) {
   const [showTotp, setShowTotp] = useState(false);
   const [showDestroy, setShowDestroy] = useState(false);
   const [showSync, setShowSync] = useState(false);
+  const [showShortcuts, setShowShortcuts] = useState(false);
+  const [showOCR, setShowOCR] = useState(false);
   const [autoLockMinutes, setAutoLockMinutes] = useState(5);
   const [clipboardClearSeconds, setClipboardClearSeconds] = useState(30);
 
   // ESC 关闭
   const handleKeyDown = useCallback((e: KeyboardEvent) => {
-    if (e.key === 'Escape' && !showBackup && !showTotp && !showDestroy && !showSync) {
+    if (e.key === 'Escape' && !showBackup && !showTotp && !showDestroy && !showSync && !showShortcuts && !showOCR) {
       onClose();
     }
-  }, [onClose, showBackup, showTotp, showDestroy, showSync]);
+  }, [onClose, showBackup, showTotp, showDestroy, showSync, showShortcuts, showOCR]);
 
   useEffect(() => {
     if (isOpen) {
@@ -346,6 +350,41 @@ export default function SettingsModal({ isOpen, onClose }: Props) {
             </div>
           </section>
 
+          {/* 快捷键和 OCR 设置 */}
+          <section>
+            <h3 className="text-xs font-semibold text-theme-secondary uppercase tracking-wider mb-3">快捷功能</h3>
+            <div className="space-y-2">
+              <button
+                onClick={() => setShowShortcuts(true)}
+                className="w-full flex items-center justify-between p-3 bg-theme-bg hover:bg-theme-card rounded-lg transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <svg className="w-4 h-4 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 6V4m0 2a2 2 0 100 4m0-4a2 2 0 110 4m-6 8a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4m6 6v10m6-2a2 2 0 100-4m0 4a2 2 0 110-4m0 4v2m0-6V4" />
+                  </svg>
+                  <span className="text-sm text-theme">快捷键设置</span>
+                </div>
+                <svg className="w-4 h-4 text-theme-secondary group-hover:text-theme transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+              <button
+                onClick={() => setShowOCR(true)}
+                className="w-full flex items-center justify-between p-3 bg-theme-bg hover:bg-theme-card rounded-lg transition-colors group"
+              >
+                <div className="flex items-center gap-3">
+                  <svg className="w-4 h-4 text-theme-secondary" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
+                  </svg>
+                  <span className="text-sm text-theme">OCR 识别设置</span>
+                </div>
+                <svg className="w-4 h-4 text-theme-secondary group-hover:text-theme transition-colors" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                </svg>
+              </button>
+            </div>
+          </section>
+
           {/* 数据管理 */}
           <section>
             <h3 className="text-xs font-semibold text-theme-secondary uppercase tracking-wider mb-3">数据</h3>
@@ -422,6 +461,8 @@ export default function SettingsModal({ isOpen, onClose }: Props) {
       <TotpSettings isOpen={showTotp} onClose={() => setShowTotp(false)} />
       <DestroyVaultDialog isOpen={showDestroy} onClose={() => setShowDestroy(false)} />
       <SyncSettings isOpen={showSync} onClose={() => setShowSync(false)} />
+      <ShortcutSettings isOpen={showShortcuts} onClose={() => setShowShortcuts(false)} />
+      <OCRSettings isOpen={showOCR} onClose={() => setShowOCR(false)} />
     </div>
   );
 }

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useCallback, useRef, useEffect } from 'react';
 import { setupVault, syncBindQuark, syncDownload, syncConfirmRestore, checkPasswordStrength, type PasswordStrengthResult } from '../../utils/api';
 
 interface Props {
@@ -35,6 +35,58 @@ const ErrorMessage = ({ message }: { message: string }) => (
   </div>
 );
 
+// 密码输入框组件
+const PasswordInput = ({ 
+  value, 
+  onChange, 
+  placeholder, 
+  show, 
+  onToggleShow,
+  autoFocus = false,
+  onKeyDown
+}: { 
+  value: string; 
+  onChange: (v: string) => void; 
+  placeholder: string;
+  show: boolean;
+  onToggleShow: () => void;
+  autoFocus?: boolean;
+  onKeyDown?: (e: React.KeyboardEvent<HTMLInputElement>) => void;
+}) => (
+  <div className="relative">
+    <div className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary">
+      <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
+      </svg>
+    </div>
+    <input
+      type={show ? 'text' : 'password'}
+      value={value}
+      onChange={(e) => onChange(e.target.value)}
+      onKeyDown={onKeyDown}
+      className="w-full pl-10 pr-12 py-3 bg-theme-bg border border-theme rounded-xl text-theme placeholder:text-theme-secondary/60 transition-all focus:border-theme-primary"
+      placeholder={placeholder}
+      autoFocus={autoFocus}
+    />
+    <button
+      type="button"
+      onClick={onToggleShow}
+      className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-theme-secondary hover:text-theme transition-colors"
+    >
+      {show ? (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
+        </svg>
+      ) : (
+        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
+        </svg>
+      )}
+    </button>
+  </div>
+);
+
 export default function SetupWizard({ onComplete }: Props) {
   const [mode, setMode] = useState<SetupMode>('choose');
   const [password, setPassword] = useState('');
@@ -49,20 +101,40 @@ export default function SetupWizard({ onComplete }: Props) {
   // 云端恢复状态
   const [restoreStep, setRestoreStep] = useState<RestoreStep>('bind');
   const [nickname, setNickname] = useState('');
+  
+  // 防抖定时器
+  const strengthCheckTimer = useRef<NodeJS.Timeout | null>(null);
 
-  const handlePasswordChange = async (value: string) => {
+  const handlePasswordChange = useCallback((value: string) => {
     setPassword(value);
+    
+    // 清除之前的定时器
+    if (strengthCheckTimer.current) {
+      clearTimeout(strengthCheckTimer.current);
+    }
+    
+    // 防抖检查密码强度
     if (value.length > 0) {
-      // 使用新的密码强度检查 API
-      const result = await checkPasswordStrength(value);
-      setStrengthResult(result);
-      // 转换为百分比用于进度条
-      setStrength(result.score * 25);
+      strengthCheckTimer.current = setTimeout(() => {
+        checkPasswordStrength(value).then(result => {
+          setStrengthResult(result);
+          setStrength(result.score * 25);
+        });
+      }, 300); // 300ms 防抖
     } else {
       setStrength(0);
       setStrengthResult(null);
     }
-  };
+  }, []);
+  
+  // 清理定时器
+  useEffect(() => {
+    return () => {
+      if (strengthCheckTimer.current) {
+        clearTimeout(strengthCheckTimer.current);
+      }
+    };
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -190,55 +262,6 @@ export default function SetupWizard({ onComplete }: Props) {
       default: return 'text-red-400';
     }
   };
-
-  // 密码输入框组件
-  const PasswordInput = ({ 
-    value, 
-    onChange, 
-    placeholder, 
-    show, 
-    onToggleShow,
-    autoFocus = false 
-  }: { 
-    value: string; 
-    onChange: (v: string) => void; 
-    placeholder: string;
-    show: boolean;
-    onToggleShow: () => void;
-    autoFocus?: boolean;
-  }) => (
-    <div className="relative">
-      <div className="absolute left-3 top-1/2 -translate-y-1/2 text-theme-secondary">
-        <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 7a2 2 0 012 2m4 0a6 6 0 01-7.743 5.743L11 17H9v2H7v2H4a1 1 0 01-1-1v-2.586a1 1 0 01.293-.707l5.964-5.964A6 6 0 1121 9z" />
-        </svg>
-      </div>
-      <input
-        type={show ? 'text' : 'password'}
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        className="w-full pl-10 pr-12 py-3 bg-theme-bg border border-theme rounded-xl text-theme placeholder:text-theme-secondary/60 transition-all focus:border-theme-primary"
-        placeholder={placeholder}
-        autoFocus={autoFocus}
-      />
-      <button
-        type="button"
-        onClick={onToggleShow}
-        className="absolute right-3 top-1/2 -translate-y-1/2 p-1 text-theme-secondary hover:text-theme transition-colors"
-      >
-        {show ? (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21" />
-          </svg>
-        ) : (
-          <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-          </svg>
-        )}
-      </button>
-    </div>
-  );
 
   // 选择模式界面
   if (mode === 'choose') {
@@ -488,7 +511,6 @@ export default function SetupWizard({ onComplete }: Props) {
               placeholder="输入主密码（至少8位）"
               show={showPassword}
               onToggleShow={() => setShowPassword(!showPassword)}
-              autoFocus
             />
             {password && (
               <div className="mt-3">
@@ -526,6 +548,13 @@ export default function SetupWizard({ onComplete }: Props) {
               placeholder="再次输入主密码"
               show={showConfirmPassword}
               onToggleShow={() => setShowConfirmPassword(!showConfirmPassword)}
+              onKeyDown={(e) => {
+                // 在确认密码框按回车时，只有密码匹配才提交
+                if (e.key === 'Enter' && password !== confirmPassword) {
+                  e.preventDefault();
+                  setError('两次输入的密码不一致');
+                }
+              }}
             />
             {confirmPassword && password && confirmPassword !== password && (
               <p className="text-orange-400 text-xs mt-2">两次输入的密码不一致</p>

@@ -12,6 +12,7 @@ contextBridge.exposeInMainWorld('electronAPI', {
   isVaultUnlocked: () => ipcRenderer.invoke('is-vault-unlocked'),
   verifyMasterPassword: (password: string) => ipcRenderer.invoke('verify-master-password', password),
   destroyVault: (password: string) => ipcRenderer.invoke('destroy-vault', password),
+  resetVault: () => ipcRenderer.invoke('reset-vault'),
 
   // 安全参数
   getSecurityInfo: () => ipcRenderer.invoke('get-security-info'),
@@ -131,4 +132,32 @@ contextBridge.exposeInMainWorld('electronAPI', {
   // 智能图标
   getSmartIcon: (title: string, url?: string) => ipcRenderer.invoke('get-smart-icon', title, url),
   matchIconByKeyword: (title: string, url?: string) => ipcRenderer.invoke('match-icon-by-keyword', title, url),
+
+  // 快捷键设置
+  shortcutGetConfig: () => ipcRenderer.invoke('shortcut:get-config'),
+  shortcutUpdate: (action: string, accelerator: string) => ipcRenderer.invoke('shortcut:update', action, accelerator),
+  shortcutValidate: (accelerator: string) => ipcRenderer.invoke('shortcut:validate', accelerator),
+  shortcutSetEnabled: (enabled: boolean) => ipcRenderer.invoke('shortcut:set-enabled', enabled),
+  shortcutReset: () => ipcRenderer.invoke('shortcut:reset'),
+
+  // OCR 设置
+  ocrInitialize: () => ipcRenderer.invoke('ocr:initialize'),
+  ocrSetLanguage: (lang: string) => ipcRenderer.invoke('ocr:set-language', lang),
+  ocrGetLanguage: () => ipcRenderer.invoke('ocr:get-language'),
+  ocrIsReady: () => ipcRenderer.invoke('ocr:is-ready'),
+  ocrRecognizeClipboard: () => ipcRenderer.invoke('ocr:recognize-clipboard'),
+  ocrRecognizeFile: (filePath: string) => ipcRenderer.invoke('ocr:recognize-file', filePath),
+
+  // 快速录入
+  quickEntryShow: () => ipcRenderer.invoke('quick-entry:show'),
+  quickEntryHide: () => ipcRenderer.invoke('quick-entry:hide'),
+  quickEntryClose: () => ipcRenderer.invoke('quick-entry:close'),
+
+  // 事件监听
+  on: (channel: string, callback: (...args: unknown[]) => void) => {
+    ipcRenderer.on(channel, (_event, ...args) => callback(...args));
+  },
+  off: (channel: string, callback: (...args: unknown[]) => void) => {
+    ipcRenderer.removeListener(channel, callback);
+  },
 });

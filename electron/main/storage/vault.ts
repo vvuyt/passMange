@@ -67,15 +67,31 @@ export function unlockVault(masterPassword: string): boolean {
   const iterations = getIterations();
   
   // 验证主密码
-  if (!verifyPassword(masterPassword, meta.salt, meta.verificationHash, iterations)) {
-    return false;
+  if (verifyPassword(masterPassword, meta.salt, meta.verificationHash, iterations)) {
+    // 派生密钥并保存到内存
+    const key = deriveKey(masterPassword, meta.salt, iterations);
+    setDerivedKey(key, iterations);
+    return true;
   }
 
-  // 派生密钥并保存到内存
-  const key = deriveKey(masterPassword, meta.salt, iterations);
-  setDerivedKey(key, iterations);
+  // 兼容处理：之前的 bug 导致升级后 version 没更新
+  // 如果当前 version=1 但用 100000 次迭代验证失败，尝试用 600000 次迭代验证
+  if (meta.version === 1) {
+    if (verifyPassword(masterPassword, meta.salt, meta.verificationHash, DEFAULT_ITERATIONS)) {
+      // 验证成功，说明是 bug 导致的 version 不一致，修复它
+      execute(
+        'UPDATE vault_meta SET version = 2, updated_at = ? WHERE id = 1',
+        [new Date().toISOString()]
+      );
+      
+      // 派生密钥并保存到内存
+      const key = deriveKey(masterPassword, meta.salt, DEFAULT_ITERATIONS);
+      setDerivedKey(key, DEFAULT_ITERATIONS);
+      return true;
+    }
+  }
 
-  return true;
+  return false;
 }
 
 /**
@@ -279,18 +295,11 @@ export function upgradeSecurityParams(masterPassword: string, newIterations: num
     setDerivedKey(oldKey, oldIterations);
   }
 
-  // 更新密码库元数据
+  // 更新密码库元数据（包括 version 字段，这是关键！）
   execute(
-    `UPDATE vault_meta SET salt = ?, verification_hash = ?, updated_at = ? WHERE id = 1`,
+    `UPDATE vault_meta SET salt = ?, verification_hash = ?, version = 2, updated_at = ? WHERE id = 1`,
     [newSalt, newVerificationHash, now]
   );
-
-  // 更新加密配置
-  const config = getCryptoConfig();
-  config.iterations = newIterations;
-  config.version = 2;
-  config.updatedAt = now;
-  saveCryptoConfig(config);
 
   // 设置新密钥
   setDerivedKey(newKey, newIterations);
@@ -335,4 +344,24 @@ export async function destroyVault(masterPassword: string): Promise<string> {
   clearDerivedKey();
 
   return backupPath;
+}
+
+/**
+ * 完全重置密码库（不需要密码验证，用于忘记密码的情况）
+ * 删除所有数据，允许重新设置主密码
+ */
+export function resetVault(): void {
+  // 清除所有数据
+  execute('DELETE FROM entry_tags');
+  execute('DELETE FROM password_entries');
+  execute('DELETE FROM categories WHERE is_default = 0');
+  execute('DELETE FROM tags');
+  execute('DELETE FROM backups');
+  execute('DELETE FROM vault_meta');
+
+  // 保存数据库
+  saveDatabase();
+
+  // 锁定密码库
+  clearDerivedKey();
 }

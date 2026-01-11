@@ -5,6 +5,18 @@ import { lockVault } from './storage/vault';
 import { isUnlocked } from './crypto';
 import { getSyncManager } from './sync/sync-manager';
 
+// 新模块导入
+import shortcutModule, { setConfig as setShortcutConfig } from './shortcut';
+import { registerShortcutIPC } from './shortcut/ipc';
+import { loadShortcutConfig } from './shortcut/config';
+import trayModule from './tray';
+import { registerTrayIPC } from './tray/ipc';
+import { loadTrayConfig } from './tray/config';
+import quickEntryModule from './quickentry';
+import { registerQuickEntryIPC } from './quickentry/ipc';
+import { registerScreenshotIPC } from './screenshot/ipc';
+import { registerOCRIPC } from './ocr/ipc';
+
 // 开发环境检测
 const isDev = process.env.NODE_ENV === 'development' || !app.isPackaged;
 
@@ -149,9 +161,25 @@ function createWindow() {
     mainWindow = null;
   });
 
+  // 最小化到托盘
+  mainWindow.on('minimize', () => {
+    const trayConfig = loadTrayConfig();
+    if (trayConfig.minimizeToTray) {
+      mainWindow?.hide();
+    }
+  });
+
   // 退出前检查未同步更改
   mainWindow.on('close', async (e) => {
     if (isQuitting) return;
+    
+    // 检查是否启用关闭到托盘
+    const trayConfig = loadTrayConfig();
+    if (trayConfig.closeToTray) {
+      e.preventDefault();
+      mainWindow?.hide();
+      return;
+    }
     
     try {
       const syncManager = getSyncManager();
@@ -210,10 +238,23 @@ app.whenReady().then(async () => {
   // 注册 IPC 处理器
   await registerIpcHandlers();
   
+  // 注册新模块的 IPC 处理器
+  registerShortcutIPC();
+  registerTrayIPC();
+  registerQuickEntryIPC();
+  registerScreenshotIPC();
+  registerOCRIPC();
+  
   // 初始化空闲检测
   initIdleDetection();
   
   createWindow();
+
+  // 初始化托盘图标
+  initTray();
+  
+  // 初始化全局快捷键
+  initShortcuts();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
@@ -223,11 +264,90 @@ app.whenReady().then(async () => {
 });
 
 // 所有窗口关闭时退出（macOS 除外）
+// 如果启用了托盘，则不退出应用
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin') {
+  const trayConfig = loadTrayConfig();
+  if (process.platform !== 'darwin' && !trayConfig.closeToTray) {
     app.quit();
   }
 });
+
+// 应用退出前清理
+app.on('will-quit', () => {
+  // 清理全局快捷键
+  shortcutModule.cleanup();
+  // 销毁托盘
+  trayModule.destroy();
+});
+
+/**
+ * 初始化系统托盘
+ */
+function initTray(): void {
+  if (!mainWindow) return;
+  
+  const trayConfig = loadTrayConfig();
+  if (!trayConfig.showOnStartup) return;
+  
+  trayModule.createTray(mainWindow, {
+    onQuickEntry: () => {
+      quickEntryModule.show();
+    },
+    onScreenshot: () => {
+      // 截图功能 - 从剪贴板获取图片并进行 OCR
+      mainWindow?.webContents.send('trigger-screenshot-ocr');
+    },
+    onOpenMainWindow: () => {
+      if (mainWindow) {
+        if (mainWindow.isMinimized()) {
+          mainWindow.restore();
+        }
+        mainWindow.show();
+        mainWindow.focus();
+      }
+    },
+    onSettings: () => {
+      if (mainWindow) {
+        mainWindow.show();
+        mainWindow.focus();
+        mainWindow.webContents.send('open-settings');
+      }
+    },
+    onExit: () => {
+      isQuitting = true;
+      app.quit();
+    },
+  });
+}
+
+/**
+ * 初始化全局快捷键
+ */
+function initShortcuts(): void {
+  const shortcutConfig = loadShortcutConfig();
+  setShortcutConfig(shortcutConfig);
+  
+  if (!shortcutConfig.enabled) {
+    console.log('Global shortcuts are disabled');
+    return;
+  }
+  
+  shortcutModule.initialize({
+    onQuickEntry: () => {
+      console.log('Quick entry shortcut triggered');
+      quickEntryModule.show();
+    },
+    onScreenshot: () => {
+      // 截图功能 - 通知渲染进程触发截图 OCR
+      console.log('Screenshot shortcut triggered, mainWindow:', !!mainWindow);
+      if (mainWindow && !mainWindow.isDestroyed()) {
+        mainWindow.webContents.send('trigger-screenshot-ocr');
+      } else {
+        console.error('mainWindow is not available');
+      }
+    },
+  });
+}
 
 // 导出 mainWindow 供其他模块使用
 export { mainWindow };

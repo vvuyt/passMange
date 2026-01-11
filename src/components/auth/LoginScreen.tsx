@@ -1,16 +1,20 @@
 import { useState, useEffect } from 'react';
-import { unlockVault } from '../../utils/api';
+import { unlockVault, resetVault } from '../../utils/api';
 
 interface Props {
   onUnlock: () => void;
+  onReset?: () => void;
 }
 
-export default function LoginScreen({ onUnlock }: Props) {
+export default function LoginScreen({ onUnlock, onReset }: Props) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [shake, setShake] = useState(false);
+  const [showResetConfirm, setShowResetConfirm] = useState(false);
+  const [resetStep, setResetStep] = useState(0);
+  const [isResetting, setIsResetting] = useState(false);
 
   // 错误时抖动效果
   useEffect(() => {
@@ -40,6 +44,30 @@ export default function LoginScreen({ onUnlock }: Props) {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleReset = async () => {
+    if (resetStep < 2) {
+      setResetStep(resetStep + 1);
+      return;
+    }
+    
+    setIsResetting(true);
+    try {
+      await resetVault();
+      setShowResetConfirm(false);
+      setResetStep(0);
+      onReset?.();
+    } catch (err) {
+      setError((err as Error).message || '重置失败');
+    } finally {
+      setIsResetting(false);
+    }
+  };
+
+  const cancelReset = () => {
+    setShowResetConfirm(false);
+    setResetStep(0);
   };
 
   return (
@@ -135,7 +163,68 @@ export default function LoginScreen({ onUnlock }: Props) {
         <p className="text-center text-theme-secondary/60 text-xs mt-6">
           您的数据使用 AES-256 加密保护
         </p>
+
+        {/* 重置按钮 */}
+        <button
+          type="button"
+          onClick={() => setShowResetConfirm(true)}
+          className="w-full mt-4 text-theme-secondary/60 hover:text-red-400 text-xs transition-colors"
+        >
+          忘记密码？重置密码库
+        </button>
       </div>
+
+      {/* 重置确认弹窗 */}
+      {showResetConfirm && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 animate-fade-in">
+          <div className="bg-theme-card rounded-2xl p-6 w-full max-w-sm mx-4 border border-theme shadow-2xl">
+            <div className="text-center mb-4">
+              <div className="w-16 h-16 mx-auto mb-4 rounded-full bg-red-500/10 flex items-center justify-center">
+                <svg className="w-8 h-8 text-red-500" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              </div>
+              <h3 className="text-lg font-bold text-theme mb-2">
+                {resetStep === 0 && '确定要重置密码库吗？'}
+                {resetStep === 1 && '这将删除所有数据！'}
+                {resetStep === 2 && '最后确认'}
+              </h3>
+              <p className="text-theme-secondary text-sm">
+                {resetStep === 0 && '重置后所有密码数据将被永久删除，无法恢复。'}
+                {resetStep === 1 && '包括所有密码、分类、标签等数据都将被清除。'}
+                {resetStep === 2 && '点击确认后将立即清除所有数据，此操作不可撤销！'}
+              </p>
+            </div>
+            
+            <div className="flex gap-3">
+              <button
+                onClick={cancelReset}
+                disabled={isResetting}
+                className="flex-1 py-2.5 px-4 bg-theme-bg border border-theme rounded-xl text-theme hover:bg-theme-hover transition-colors"
+              >
+                取消
+              </button>
+              <button
+                onClick={handleReset}
+                disabled={isResetting}
+                className="flex-1 py-2.5 px-4 bg-red-500 hover:bg-red-600 disabled:opacity-50 text-white font-medium rounded-xl transition-colors flex items-center justify-center gap-2"
+              >
+                {isResetting ? (
+                  <>
+                    <svg className="w-4 h-4 animate-spin" fill="none" viewBox="0 0 24 24">
+                      <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
+                      <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" />
+                    </svg>
+                    重置中...
+                  </>
+                ) : (
+                  resetStep < 2 ? `确认 (${resetStep + 1}/3)` : '确认重置'
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

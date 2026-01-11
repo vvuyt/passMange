@@ -12,6 +12,7 @@ import {
   changeMasterPassword,
   verifyMasterPassword,
   destroyVault,
+  resetVault,
   getVaultSecurityInfo,
   checkSecurityUpgrade,
   upgradeSecurityParams,
@@ -128,6 +129,15 @@ export async function registerIpcHandlers(): Promise<void> {
     try {
       const backupPath = await destroyVault(password);
       return { success: true, backupPath };
+    } catch (error) {
+      return { success: false, error: (error as Error).message };
+    }
+  });
+
+  ipcMain.handle('reset-vault', async () => {
+    try {
+      resetVault();
+      return { success: true };
     } catch (error) {
       return { success: false, error: (error as Error).message };
     }

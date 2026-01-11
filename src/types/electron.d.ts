@@ -111,6 +111,7 @@ export interface ElectronAPI {
   isVaultUnlocked: () => Promise<boolean>;
   verifyMasterPassword: (password: string) => Promise<{ success: boolean; error?: string }>;
   destroyVault: (password: string) => Promise<{ success: boolean; backupPath?: string; error?: string }>;
+  resetVault: () => Promise<{ success: boolean; error?: string }>;
 
   // 安全参数
   getSecurityInfo: () => Promise<{
@@ -239,6 +240,29 @@ export interface ElectronAPI {
   // 智能图标
   getSmartIcon: (title: string, url?: string) => Promise<{ icon: string | null; source: 'favicon' | 'keyword' | 'none' }>;
   matchIconByKeyword: (title: string, url?: string) => Promise<string | null>;
+
+  // 快捷键设置
+  shortcutGetConfig: () => Promise<{ success: boolean; config?: { quickEntry: string; screenshot: string; enabled: boolean }; error?: string }>;
+  shortcutUpdate: (action: string, accelerator: string) => Promise<{ success: boolean; config?: { quickEntry: string; screenshot: string; enabled: boolean }; error?: string }>;
+  shortcutValidate: (accelerator: string) => Promise<{ success: boolean; isValid?: boolean; error?: string }>;
+  shortcutSetEnabled: (enabled: boolean) => Promise<{ success: boolean; config?: { quickEntry: string; screenshot: string; enabled: boolean }; error?: string }>;
+  shortcutReset: () => Promise<{ success: boolean; config?: { quickEntry: string; screenshot: string; enabled: boolean }; error?: string }>;
+
+  // OCR 设置
+  ocrInitialize: () => Promise<{ success: boolean; error?: string }>;
+  ocrSetLanguage: (lang: string) => Promise<{ success: boolean; error?: string }>;
+  ocrGetLanguage: () => Promise<{ success: boolean; language?: string; error?: string }>;
+  ocrIsReady: () => Promise<{ success: boolean; isReady?: boolean; error?: string }>;
+  ocrRecognizeClipboard: () => Promise<{ success: boolean; text?: string; credentials?: unknown[]; error?: string }>;
+  ocrRecognizeFile: (filePath: string) => Promise<{ success: boolean; text?: string; credentials?: unknown[]; error?: string }>;
+
+  // 快速录入
+  quickEntryShow: () => Promise<void>;
+  quickEntryHide: () => Promise<void>;
+
+  // 事件监听
+  on: (channel: string, callback: (...args: unknown[]) => void) => void;
+  off: (channel: string, callback: (...args: unknown[]) => void) => void;
 }
 
 declare global {

@@ -23,6 +23,7 @@
     "react-dom": "^18.3.1",
     "react-router-dom": "^6.26.0",
     "sql.js": "^1.10.0",
+    "tesseract.js": "^7.0.0",
     "uuid": "^9.0.0",
     "xlsx": "^0.18.5",
     "zustand": "^4.5.4"
@@ -70,11 +71,15 @@
       "target": [
         {
           "target": "nsis",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "portable",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icon.ico",
@@ -91,7 +96,10 @@
       "target": [
         {
           "target": "dmg",
-          "arch": ["x64", "arm64"]
+          "arch": [
+            "x64",
+            "arm64"
+          ]
         }
       ],
       "icon": "build/icon.icns",
@@ -102,11 +110,15 @@
       "target": [
         {
           "target": "AppImage",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         },
         {
           "target": "deb",
-          "arch": ["x64"]
+          "arch": [
+            "x64"
+          ]
         }
       ],
       "icon": "build/icons",

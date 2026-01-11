@@ -70,6 +70,13 @@ export async function destroyVault(password: string): Promise<string> {
   return result.backupPath || '';
 }
 
+export async function resetVault(): Promise<void> {
+  const result = await api().resetVault();
+  if (!result.success) {
+    throw new Error(result.error || '重置失败');
+  }
+}
+
 // ========== 安全参数 ==========
 export interface SecurityInfo {
   iterations: number;
@@ -490,4 +497,94 @@ export async function getSmartIcon(title: string, url?: string): Promise<SmartIc
 
 export async function matchIconByKeyword(title: string, url?: string): Promise<string | null> {
   return api().matchIconByKeyword(title, url);
+}
+
+
+// ========== 快捷键设置 ==========
+export interface ShortcutConfig {
+  quickEntry: string;
+  screenshot: string;
+  enabled: boolean;
+}
+
+export async function getShortcutConfig(): Promise<ShortcutConfig> {
+  const result = await api().shortcutGetConfig();
+  if (!result.success) {
+    throw new Error(result.error || '获取快捷键配置失败');
+  }
+  return result.config!;
+}
+
+export async function updateShortcut(action: string, accelerator: string): Promise<ShortcutConfig> {
+  const result = await api().shortcutUpdate(action, accelerator);
+  if (!result.success) {
+    throw new Error(result.error || '更新快捷键失败');
+  }
+  return result.config!;
+}
+
+export async function validateShortcut(accelerator: string): Promise<boolean> {
+  const result = await api().shortcutValidate(accelerator);
+  if (!result.success) {
+    throw new Error(result.error || '验证快捷键失败');
+  }
+  return result.isValid!;
+}
+
+export async function setShortcutEnabled(enabled: boolean): Promise<ShortcutConfig> {
+  const result = await api().shortcutSetEnabled(enabled);
+  if (!result.success) {
+    throw new Error(result.error || '设置快捷键启用状态失败');
+  }
+  return result.config!;
+}
+
+export async function resetShortcuts(): Promise<ShortcutConfig> {
+  const result = await api().shortcutReset();
+  if (!result.success) {
+    throw new Error(result.error || '重置快捷键失败');
+  }
+  return result.config!;
+}
+
+// ========== OCR 设置 ==========
+export type OCRLanguage = 'chi_sim' | 'eng' | 'chi_sim+eng';
+
+export async function initializeOCR(): Promise<void> {
+  const result = await api().ocrInitialize();
+  if (!result.success) {
+    throw new Error(result.error || 'OCR 初始化失败');
+  }
+}
+
+export async function setOCRLanguage(lang: OCRLanguage): Promise<void> {
+  const result = await api().ocrSetLanguage(lang);
+  if (!result.success) {
+    throw new Error(result.error || '设置 OCR 语言失败');
+  }
+}
+
+export async function getOCRLanguage(): Promise<OCRLanguage> {
+  const result = await api().ocrGetLanguage();
+  if (!result.success) {
+    throw new Error(result.error || '获取 OCR 语言失败');
+  }
+  return result.language as OCRLanguage;
+}
+
+export async function isOCRReady(): Promise<boolean> {
+  const result = await api().ocrIsReady();
+  if (!result.success) {
+    throw new Error(result.error || '检查 OCR 状态失败');
+  }
+  return result.isReady!;
+}
+
+// ========== 快速录入 ==========
+export async function showQuickEntry(): Promise<void> {
+  await api().quickEntryShow();
+}
+
+export async function hideQuickEntry(): Promise<void> {
+  await api().quickEntryHide();
 }
